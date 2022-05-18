@@ -13,6 +13,7 @@ namespace Slice.Repositories
         const int quality = 100;
         public SliceRepository(List<Format> formats)
         {
+            Directory.CreateDirectory("../../images");
             _formats = formats;
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
         }
@@ -33,13 +34,13 @@ namespace Slice.Repositories
             using (var memoryStream = new MemoryStream())
             {
                 await _inst.Image.CopyToAsync(memoryStream);
-                using (var stream = new FileStream("./images/file.jpg", FileMode.Create))
+                using (var stream = new FileStream("../../images/file.jpg", FileMode.Create))
                 {
                     _inst.Image.CopyTo(stream);
                 }
             }
 
-            using (var input = File.OpenRead("./images/file.jpg"))
+            using (var input = File.OpenRead("../../images/file.jpg"))
             using (var inputStream = new SKManagedStream(input))
             using (var original = SKBitmap.Decode(inputStream))
             {
@@ -48,7 +49,7 @@ namespace Slice.Repositories
                 await SaveToPdf(pieces, _inst.Landscape);
                 for (int i=0; i<pieces.Count; i++)
                 using (var image = SKImage.FromBitmap(pieces[i]))
-                using (var output = File.OpenWrite($"./images/i{i}.jpg"))
+                using (var output = File.OpenWrite($"../../images/i{i}.jpg"))
                 {
                     image.Encode(SKEncodedImageFormat.Jpeg, quality)
                             .SaveTo(output);
@@ -102,7 +103,7 @@ namespace Slice.Repositories
                 }               
 
                 // Save the document...
-                string filename = "./images/Poster.pdf";
+                string filename = "../../images/Poster.pdf";
                 pdfDocument.Save(filename);
             }
         }
