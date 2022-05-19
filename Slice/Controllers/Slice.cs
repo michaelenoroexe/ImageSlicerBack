@@ -39,7 +39,7 @@ namespace Slice.Controllers
             string userFormat = Request.Form.FirstOrDefault(reqest=>reqest.Key=="type").Value.ToString();
             int colNumber = Convert.ToInt32(Request.Form.First(reqest => reqest.Key == "colNum").Value);
             bool orient = Request.Form.FirstOrDefault(reqest => reqest.Key == "orientation").Value.ToString() == "landscape"? true : false;
-            await _slice.TestImageResize(new SliceInstructions(image, _formats.First(format=>format.Type==userFormat), colNumber, orient));
+            await _slice.Slice(new SliceInstructions(image, _formats.First(format=>format.Type==userFormat), colNumber, orient));
             return Ok();
         }
 

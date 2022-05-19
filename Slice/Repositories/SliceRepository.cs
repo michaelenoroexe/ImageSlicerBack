@@ -18,13 +18,7 @@ namespace Slice.Repositories
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
         }
 
-        public async Task<string> Slice(SliceInstructions _inst)
-        {
-
-            return "ar";
-        }
-
-        public async Task TestImageResize(SliceInstructions _inst)
+        public async Task Slice(SliceInstructions _inst)
         {
             if (_inst.Image == null || _inst.Image.Length == 0)
             {
@@ -94,11 +88,13 @@ namespace Slice.Repositories
                 foreach (SKBitmap piece in _pieces)
                 {
                     page = pdfDocument.AddPage();
+                    page.Height = !_landscape?(piece.Height * 0.7501573317):(piece.Width * 0.7501573317);
+                    page.Width = _landscape ? (piece.Height * 0.7501573317) : (piece.Width * 0.7501573317);
                     if (_landscape) page.Orientation = PageOrientation.Landscape;
                     gfx = XGraphics.FromPdfPage(page);
                     using (var p = SKImage.FromBitmap(piece).Encode(SKEncodedImageFormat.Jpeg, 100).AsStream())
                     {
-                        gfx.DrawImage(XBitmapImage.FromStream(p), new XPoint(10, 10));
+                        gfx.DrawImage(XBitmapImage.FromStream(p), new XPoint(0, 0));
                     }
                 }               
 
