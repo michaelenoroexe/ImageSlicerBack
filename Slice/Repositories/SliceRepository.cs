@@ -41,6 +41,7 @@ namespace Slice.Repositories
                 _inst.Bitmap = original;
                 List<SKBitmap> pieces = await ImageSlice(_inst);
                 await SaveToPdf(pieces, _inst.Landscape);
+                return;
                 for (int i=0; i<pieces.Count; i++)
                 using (var image = SKImage.FromBitmap(pieces[i]))
                 using (var output = File.OpenWrite($"../../images/i{i}.jpg"))
@@ -96,8 +97,7 @@ namespace Slice.Repositories
                     {
                         gfx.DrawImage(XBitmapImage.FromStream(p), new XPoint(0, 0));
                     }
-                }               
-
+                }
                 // Save the document...
                 string filename = "../../images/Poster.pdf";
                 pdfDocument.Save(filename);

@@ -40,7 +40,11 @@ namespace Slice.Controllers
             int colNumber = Convert.ToInt32(Request.Form.First(reqest => reqest.Key == "colNum").Value);
             bool orient = Request.Form.FirstOrDefault(reqest => reqest.Key == "orientation").Value.ToString() == "landscape"? true : false;
             await _slice.Slice(new SliceInstructions(image, _formats.First(format=>format.Type==userFormat), colNumber, orient));
-            return Ok();
+            Response.Clear();
+            // Response.AddHeader("Content-Length", new FileInfo(sFilePath).Length.ToString()); // upon you 
+            var bytes = await System.IO.File.ReadAllBytesAsync("../../images/Poster.pdf");
+            
+            return File(bytes, "application/pdf") ;
         }
 
     }
