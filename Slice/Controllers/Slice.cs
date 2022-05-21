@@ -39,11 +39,11 @@ namespace Slice.Controllers
             string userFormat = Request.Form.FirstOrDefault(reqest=>reqest.Key=="type").Value.ToString();
             int colNumber = Convert.ToInt32(Request.Form.First(reqest => reqest.Key == "colNum").Value);
             bool orient = Request.Form.FirstOrDefault(reqest => reqest.Key == "orientation").Value.ToString() == "landscape"? true : false;
-            await _slice.Slice(new SliceInstructions(image, _formats.First(format=>format.Type==userFormat), colNumber, orient));
+            string path = await _slice.Slice(new SliceInstructions(image, _formats.First(format=>format.Type==userFormat), colNumber, orient));
             Response.Clear();
             // Response.AddHeader("Content-Length", new FileInfo(sFilePath).Length.ToString()); // upon you 
-            var bytes = await System.IO.File.ReadAllBytesAsync("../../images/Poster.pdf");
-            
+            var bytes = await System.IO.File.ReadAllBytesAsync(path+"/Poster.pdf");
+            Directory.Delete(path, true);
             return File(bytes, "application/pdf") ;
         }
 

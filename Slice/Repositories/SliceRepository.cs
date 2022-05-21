@@ -13,42 +13,35 @@ namespace Slice.Repositories
         const int quality = 100;
         public SliceRepository(List<Format> formats)
         {
-            Directory.CreateDirectory("../../images");
             _formats = formats;
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
         }
 
-        public async Task Slice(SliceInstructions _inst)
+        public async Task<string> Slice(SliceInstructions _inst)
         {
             if (_inst.Image == null || _inst.Image.Length == 0)
             {
                 throw new Exception("Null");
             }
-
+            string path = "../../"+Guid.NewGuid().ToString();
+            Directory.CreateDirectory(path);
             using (var memoryStream = new MemoryStream())
             {
                 await _inst.Image.CopyToAsync(memoryStream);
-                using (var stream = new FileStream("../../images/file.jpg", FileMode.Create))
+                using (var stream = new FileStream(path+"/file.jpg", FileMode.Create))
                 {
                     _inst.Image.CopyTo(stream);
                 }
             }
 
-            using (var input = File.OpenRead("../../images/file.jpg"))
+            using (var input = File.OpenRead(path + "/file.jpg"))
             using (var inputStream = new SKManagedStream(input))
             using (var original = SKBitmap.Decode(inputStream))
             {
                 _inst.Bitmap = original;
                 List<SKBitmap> pieces = await ImageSlice(_inst);
-                await SaveToPdf(pieces, _inst.Landscape);
-                return;
-                for (int i=0; i<pieces.Count; i++)
-                using (var image = SKImage.FromBitmap(pieces[i]))
-                using (var output = File.OpenWrite($"../../images/i{i}.jpg"))
-                {
-                    image.Encode(SKEncodedImageFormat.Jpeg, quality)
-                            .SaveTo(output);
-                }
+                await SaveToPdf(pieces, path, _inst.Landscape);
+                return path;       
             }
         }
         // Slice image to a multiple parts
@@ -78,7 +71,7 @@ namespace Slice.Repositories
             return pieces;      
         }
         // Save multiple picture parts in to a pdf file
-        public async Task SaveToPdf(List<SKBitmap> _pieces, bool _landscape=false)
+        public async Task SaveToPdf(List<SKBitmap> _pieces, string path, bool _landscape=false)
         {
             using (var pdfDocument = new PdfDocument())
             {
@@ -99,7 +92,7 @@ namespace Slice.Repositories
                     }
                 }
                 // Save the document...
-                string filename = "../../images/Poster.pdf";
+                string filename = path+"/Poster.pdf";
                 pdfDocument.Save(filename);
             }
         }
