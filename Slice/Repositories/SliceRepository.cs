@@ -1,6 +1,5 @@
 ﻿using SkiaSharp;
 using Slice.Models;
-using System.Drawing;
 using PdfSharp;
 using PdfSharp.Pdf;
 using PdfSharp.Drawing;
@@ -14,28 +13,36 @@ namespace Slice.Repositories
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
         }
 
-        public async Task<string> SliceAsync(SliceInstructions _inst)
+        public async Task<SliceExecutionResult> SliceAsync(SliceInstructions _inst)
         {
             // Create directory of current slice operation and save file to it
             string path = "../../"+Guid.NewGuid().ToString();
             Directory.CreateDirectory(path);
-            using (var memoryStream = new MemoryStream())
+            string reservePath = path;
+            try
             {
-                await _inst.Image.CopyToAsync(memoryStream);
-                using (var stream = new FileStream(path+"/file.jpg", FileMode.Create))
+                using (var memoryStream = new MemoryStream())
                 {
-                    _inst.Image.CopyTo(stream);
+                    await _inst.Image.CopyToAsync(memoryStream);
+                    using (var stream = new FileStream(path + "/file.jpg", FileMode.Create))
+                    {
+                        _inst.Image.CopyTo(stream);
+                    }
+                }
+                // Read saved file and create pdf based on it.            
+                using (var input = File.OpenRead(path + "/file.jpg"))
+                using (var inputStream = new SKManagedStream(input))
+                using (var original = SKBitmap.Decode(inputStream))
+                {
+                    _inst.Bitmap = original;
+                    List<SKBitmap> pieces = ImageSlice(_inst);
+                    SaveToPdf(pieces, path, _inst.Landscape);
+                    return new SliceExecutionResult(path);
                 }
             }
-            // Read saved file and create pdf based on it.
-            using (var input = File.OpenRead(path + "/file.jpg"))
-            using (var inputStream = new SKManagedStream(input))
-            using (var original = SKBitmap.Decode(inputStream))
+            catch (Exception ex)
             {
-                _inst.Bitmap = original;
-                List<SKBitmap> pieces = ImageSlice(_inst);
-                SaveToPdf(pieces, path, _inst.Landscape); 
-                return path;       
+                return new SliceExecutionResult(reservePath, true);
             }
         }
         // Slice image to a multiple parts

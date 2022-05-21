@@ -1,9 +1,6 @@
 ﻿using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Slice.Models;
-using System.Drawing;
-using SkiaSharp;
-using System.Net.Http;
 using Slice.Repositories;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -45,14 +42,19 @@ namespace Slice.Controllers
                 int colNumber = Convert.ToInt32(Request.Form.First(reqest => reqest.Key == "colNum").Value);
                 bool orient = Request.Form.FirstOrDefault(reqest => reqest.Key == "orientation").Value.ToString() == "landscape" ? true : false;
                 // Slice image
-                path = await _slice.SliceAsync(new SliceInstructions(image, _formats.First(format => format.Type == userFormat), colNumber, orient));
+                var res = await _slice.SliceAsync(new SliceInstructions(image, _formats.First(format => format.Type == userFormat), colNumber, orient));        
+                path = res.Path;
+                if (res.ErrStatus) throw new Exception("Execution error");
                 // Get Image and return to client
                 var bytes = await System.IO.File.ReadAllBytesAsync(path + "/Poster.pdf");                
                 return File(bytes, "application/pdf");
             }
             catch (Exception ex)
             { return BadRequest(ex.Message); }
-            finally { Directory.Delete(path, true); }
+            finally 
+            {
+                Directory.Delete(path, true); 
+            }
         }
 
     }

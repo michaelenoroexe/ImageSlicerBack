@@ -1,13 +1,4 @@
-﻿using Microsoft.AspNetCore.Builder;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Hosting;
-using Slice.Models;
+﻿using Slice.Models;
 using Slice.Repositories;
 
 namespace Slice
@@ -23,7 +14,6 @@ namespace Slice
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvcCore().AddAuthorization();
-
             services.AddCors(opt =>                
                 opt.AddPolicy(_POLICY_NAME,
                 builder =>
@@ -46,10 +36,7 @@ namespace Slice
                 new Format("A5", 148, 210),
                 new Format("A6", 105, 148),
             }
-            );
-            //JwtAuth
-            //services.AddSingleton<IPostConfigureOptions<JwtBearerOptions>, ConfigureJwtBearerOptions>();
-       
+            );             
         }
         public void Configure(IApplicationBuilder app)
         {
@@ -68,6 +55,5 @@ namespace Slice
                 endpoints.MapControllers().RequireCors(_POLICY_NAME);
             });
         }
-
     }
 }
