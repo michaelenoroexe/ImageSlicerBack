@@ -9,20 +9,14 @@ namespace Slice.Repositories
 {
     public class SliceRepository
     {
-        private readonly List<Format> _formats;
-        const int quality = 100;
-        public SliceRepository(List<Format> formats)
+        public SliceRepository()
         {
-            _formats = formats;
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
         }
 
-        public async Task<string> Slice(SliceInstructions _inst)
+        public async Task<string> SliceAsync(SliceInstructions _inst)
         {
-            if (_inst.Image == null || _inst.Image.Length == 0)
-            {
-                throw new Exception("Null");
-            }
+            // Create directory of current slice operation and save file to it
             string path = "../../"+Guid.NewGuid().ToString();
             Directory.CreateDirectory(path);
             using (var memoryStream = new MemoryStream())
@@ -33,20 +27,21 @@ namespace Slice.Repositories
                     _inst.Image.CopyTo(stream);
                 }
             }
-
+            // Read saved file and create pdf based on it.
             using (var input = File.OpenRead(path + "/file.jpg"))
             using (var inputStream = new SKManagedStream(input))
             using (var original = SKBitmap.Decode(inputStream))
             {
                 _inst.Bitmap = original;
-                List<SKBitmap> pieces = await ImageSlice(_inst);
-                await SaveToPdf(pieces, path, _inst.Landscape);
+                List<SKBitmap> pieces = ImageSlice(_inst);
+                SaveToPdf(pieces, path, _inst.Landscape); 
                 return path;       
             }
         }
         // Slice image to a multiple parts
-        public async Task<List<SKBitmap>> ImageSlice (SliceInstructions _instr)
-        {            
+        public List<SKBitmap> ImageSlice (SliceInstructions _instr)
+        {
+            // Initializing
             float mm = 3.7795f;
             int formatWidth = (int)(!_instr.Landscape ? _instr.Format.Width * mm : _instr.Format.Height * mm);
             int formatHeight = (int)(_instr.Landscape ? _instr.Format.Width * mm : _instr.Format.Height * mm);
@@ -56,7 +51,7 @@ namespace Slice.Repositories
             var resized = _instr.Bitmap.Resize(new SKImageInfo(totalWidth, totalHeight), SKFilterQuality.High);
             var pieces = new List<SKBitmap>();
             SKRectI bitmapRect = new SKRectI(0, 0, formatWidth, formatHeight);
-
+            // Split
             for (int i = 0; i < rownumber; i++)
             for (int j = 0; j < _instr.Columns; j++)
             {
@@ -67,11 +62,10 @@ namespace Slice.Repositories
                 vtmp.Save();         
                 pieces.Add(part);
             }            
-
             return pieces;      
         }
         // Save multiple picture parts in to a pdf file
-        public async Task SaveToPdf(List<SKBitmap> _pieces, string path, bool _landscape=false)
+        public void SaveToPdf(List<SKBitmap> _pieces, string path, bool _landscape=false)
         {
             using (var pdfDocument = new PdfDocument())
             {
@@ -81,6 +75,7 @@ namespace Slice.Repositories
                 XGraphics gfx;
                 foreach (SKBitmap piece in _pieces)
                 {
+                    // Creating 1 page of pdf
                     page = pdfDocument.AddPage();
                     page.Height = !_landscape?(piece.Height * 0.7501573317):(piece.Width * 0.7501573317);
                     page.Width = _landscape ? (piece.Height * 0.7501573317) : (piece.Width * 0.7501573317);
@@ -98,16 +93,3 @@ namespace Slice.Repositories
         }
     }
 }
-
-//using (var image = SKImage.FromBitmap(resized))
-//{
-//    using (var memstrim = new MemoryStream(image.Encode().ToArray()))
-//    {
-//        IFormFile resizedImage = new FormFile(memstrim, 0, memstrim.Length, null, "resizedImage.jpg")
-//        {
-//            Headers = new HeaderDictionary(),
-//            ContentType = "image/*"
-//        };
-//        return resizedImage;
-//    }
-//}

@@ -35,16 +35,24 @@ namespace Slice.Controllers
         [EnableCors("_AllowAll")]
         public async Task<ActionResult> Post()
         {
-            IFormFile image = Request.Form.Files.SingleOrDefault();
-            string userFormat = Request.Form.FirstOrDefault(reqest=>reqest.Key=="type").Value.ToString();
-            int colNumber = Convert.ToInt32(Request.Form.First(reqest => reqest.Key == "colNum").Value);
-            bool orient = Request.Form.FirstOrDefault(reqest => reqest.Key == "orientation").Value.ToString() == "landscape"? true : false;
-            string path = await _slice.Slice(new SliceInstructions(image, _formats.First(format=>format.Type==userFormat), colNumber, orient));
-            Response.Clear();
-            // Response.AddHeader("Content-Length", new FileInfo(sFilePath).Length.ToString()); // upon you 
-            var bytes = await System.IO.File.ReadAllBytesAsync(path+"/Poster.pdf");
-            Directory.Delete(path, true);
-            return File(bytes, "application/pdf") ;
+            string path = "";
+            try
+            {
+                // initializing of slice
+                if (Request.Form.Files == null || Request.Form.Files.Count == 0) throw new Exception("Empty Image");
+                IFormFile image = Request.Form.Files.SingleOrDefault()!;
+                string userFormat = Request.Form.FirstOrDefault(reqest => reqest.Key == "type").Value.ToString();
+                int colNumber = Convert.ToInt32(Request.Form.First(reqest => reqest.Key == "colNum").Value);
+                bool orient = Request.Form.FirstOrDefault(reqest => reqest.Key == "orientation").Value.ToString() == "landscape" ? true : false;
+                // Slice image
+                path = await _slice.SliceAsync(new SliceInstructions(image, _formats.First(format => format.Type == userFormat), colNumber, orient));
+                // Get Image and return to client
+                var bytes = await System.IO.File.ReadAllBytesAsync(path + "/Poster.pdf");                
+                return File(bytes, "application/pdf");
+            }
+            catch (Exception ex)
+            { return BadRequest(ex.Message); }
+            finally { Directory.Delete(path, true); }
         }
 
     }
