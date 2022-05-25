@@ -24,13 +24,13 @@ namespace Slice.Repositories
                 using (var memoryStream = new MemoryStream())
                 {
                     await _inst.Image.CopyToAsync(memoryStream);
-                    using (var stream = new FileStream(path + "/file.jpg", FileMode.Create))
+                    using (var stream = new FileStream(Path.Combine(path, "file.jpg"), FileMode.Create))
                     {
                         _inst.Image.CopyTo(stream);
                     }
                 }
                 // Read saved file and create pdf based on it.            
-                using (var input = File.OpenRead(path + "/file.jpg"))
+                using (var input = File.OpenRead(Path.Combine(path, "file.jpg")))
                 using (var inputStream = new SKManagedStream(input))
                 using (var original = SKBitmap.Decode(inputStream))
                 {
@@ -94,7 +94,7 @@ namespace Slice.Repositories
                     }
                 }
                 // Save the document...
-                string filename = path+"/Poster.pdf";
+                string filename = Path.Combine(path,"Poster.pdf");
                 pdfDocument.Save(filename);
             }
         }
