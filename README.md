@@ -34,6 +34,10 @@ type :
  - A5  |  148, 210
  - A6  |  105, 148
 
+colNum - Maximum of colums are depends from selected format and dunamicly change on client
+
+orientation - landscape or portrait
+
 If size of image is not enough to fit user requested format type and column number, then application automatically stretch it.
 Columns installed by the user on the outher hand number of rows calculates automatically.
 
